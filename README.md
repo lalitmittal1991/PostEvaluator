@@ -1,6 +1,7 @@
 # PostEvaluator Chrome Extension
 
 A Chrome extension that automatically evaluates LinkedIn posts for accuracy and original thought using Google's Gemini AI. The extension provides real-time scoring as you scroll through your LinkedIn feed.
+## checking the comment by lalit
 
 ## Features
 
