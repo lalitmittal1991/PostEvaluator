@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Extension Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .icon-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .icon {
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .icon-16 { width: 16px; height: 16px; font-size: 8px; }
+        .icon-48 { width: 48px; height: 48px; font-size: 20px; }
+        .icon-128 { width: 128px; height: 128px; font-size: 48px; }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 5px;
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>PostEvaluator Extension Icons</h2>
+        <p>This page will generate the required icon files for your Chrome extension. Right-click on each icon below and "Save image as" to download them.</p>
+        <p><strong>Save them as:</strong></p>
+        <ul>
+            <li>icon16.png (16x16 pixels)</li>
+            <li>icon48.png (48x48 pixels)</li>
+            <li>icon128.png (128x128 pixels)</li>
+        </ul>
+    </div>
+
+    <div class="icon-container">
+        <canvas id="icon16" width="16" height="16"></canvas>
+        <div>icon16.png</div>
+    </div>
+    
+    <div class="icon-container">
+        <canvas id="icon48" width="48" height="48"></canvas>
+        <div>icon48.png</div>
+    </div>
+    
+    <div class="icon-container">
+        <canvas id="icon128" width="128" height="128"></canvas>
+        <div>icon128.png</div>
+    </div>
+
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Draw background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add rounded corners effect
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Draw chart icon
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📊', size/2, size/2);
+        }
+        
+        // Create all icons
+        createIcon('icon16', 16);
+        createIcon('icon48', 48);
+        createIcon('icon128', 128);
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin: 0;
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    h1 {
+      text-align: center;
+      margin: 0 0 20px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    input[type="text"]:focus, input[type="password"]:focus {
+      outline: none;
+      background: white;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .status.success {
+      background: rgba(46, 204, 113, 0.3);
+      border: 1px solid rgba(46, 204, 113, 0.5);
+    }
+    
+    .status.error {
+      background: rgba(231, 76, 60, 0.3);
+      border: 1px solid rgba(231, 76, 60, 0.5);
+    }
+    
+    .instructions {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    
+    .instructions h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+    }
+    
+    .instructions ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .instructions li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 PostEvaluator</h1>
+    
+    <div class="form-group">
+      <label for="apiKey">Gemini API Key:</label>
+      <input type="password" id="apiKey" placeholder="Enter your Gemini API key">
+    </div>
+    
+    <button id="saveApiKey">Save API Key</button>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="instructions">
+      <h3>How to use:</h3>
+      <ol>
+        <li>Enter your Gemini API key above</li>
+        <li>Navigate to any LinkedIn post</li>
+        <li>Click the "Evaluate Post" button that appears</li>
+        <li>View accuracy and originality scores (1-10)</li>
+      </ol>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "PostEvaluator",
+  "version": "1.0",
+  "description": "Evaluate LinkedIn posts for accuracy and original thought using AI",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PostEvaluator"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
