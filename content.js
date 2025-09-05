@@ -2,26 +2,21 @@
 (function() {
   'use strict';
 
-  let evaluationButton = null;
-  let isEvaluating = false;
   let evaluatedPosts = new Set(); // Track evaluated posts to avoid duplicates
-  let evaluationQueue = []; // Queue for pending evaluations
-  let isProcessingQueue = false;
+  let postButtons = new Map(); // Track buttons for each post
 
-  // Function to create the evaluation button
-  function createEvaluationButton() {
-    if (evaluationButton) {
-      evaluationButton.remove();
-    }
-
-    evaluationButton = document.createElement('button');
-    evaluationButton.id = 'post-evaluator-btn';
-    evaluationButton.innerHTML = '📊 Evaluate Post';
-    evaluationButton.className = 'post-evaluator-button';
+  // Function to create the evaluation button for a specific post
+  function createEvaluationButton(postId, postContent) {
+    const button = document.createElement('button');
+    button.id = `post-evaluator-btn-${postId}`;
+    button.innerHTML = '📊 Evaluate';
+    button.className = 'post-evaluator-button';
+    button.dataset.postId = postId;
+    button.dataset.postContent = postContent;
     
-    evaluationButton.addEventListener('click', handleEvaluation);
+    button.addEventListener('click', (e) => handleEvaluation(e, postId, postContent));
     
-    return evaluationButton;
+    return button;
   }
 
   // Function to find all LinkedIn posts on the page
@@ -88,6 +83,52 @@
     return posts.length > 0 ? posts[0].content : null;
   }
 
+  // Function to add evaluation button to a specific post
+  function addButtonToPost(post) {
+    const postId = post.id;
+    
+    // Skip if already has a button or is already evaluated
+    if (postButtons.has(postId) || evaluatedPosts.has(postId)) {
+      return;
+    }
+
+    const button = createEvaluationButton(postId, post.content);
+    
+    // Find the best place to insert the button for this specific post
+    const insertionPoint = findInsertionPointForPost(post.element);
+    
+    if (insertionPoint) {
+      insertionPoint.appendChild(button);
+      postButtons.set(postId, { button, element: post.element });
+    }
+  }
+
+  // Function to find insertion point for a specific post
+  function findInsertionPointForPost(postElement) {
+    // Try to find the post actions area or create a suitable insertion point
+    const selectors = [
+      '.feed-shared-control-menu',
+      '.feed-shared-actor',
+      '.feed-shared-update-v2__description-wrapper',
+      '.feed-shared-update-v2__main'
+    ];
+
+    for (const selector of selectors) {
+      const element = postElement.querySelector(selector);
+      if (element) {
+        return element;
+      }
+    }
+
+    // If no specific area found, try to find a good spot within the post
+    const descriptionWrapper = postElement.querySelector('.feed-shared-update-v2__description-wrapper');
+    if (descriptionWrapper) {
+      return descriptionWrapper;
+    }
+
+    return postElement;
+  }
+
   // Function to find the best place to insert the button
   function findInsertionPoint() {
     // Try to find the post actions area or create a suitable insertion point
@@ -109,10 +150,11 @@
   }
 
   // Function to handle post evaluation
-  async function handleEvaluation() {
-    if (isEvaluating) return;
+  async function handleEvaluation(event, postId, postContent) {
+    const button = event.target;
+    
+    if (button.disabled) return;
 
-    const postContent = findPostContent();
     if (!postContent) {
       showNotification('No post content found. Please make sure you are on a LinkedIn post.', 'error');
       return;
@@ -123,9 +165,9 @@
       return;
     }
 
-    isEvaluating = true;
-    evaluationButton.disabled = true;
-    evaluationButton.innerHTML = '⏳ Evaluating...';
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<span class="loader"></span> Evaluating...';
 
     try {
       // Send message to background script for evaluation
@@ -135,17 +177,85 @@
       });
 
       if (response && response.success) {
-        showEvaluationResults(response.scores);
+        // Mark as evaluated
+        evaluatedPosts.add(postId);
+        
+        // Show evaluation results
+        showEvaluationResultsForPost(response.scores, postId, postContent);
+        
+        // Update button to show completed state
+        button.innerHTML = '✅ Evaluated';
+        button.style.background = '#10b981';
+        
+        // Remove button after a delay
+        setTimeout(() => {
+          if (button.parentElement) {
+            button.remove();
+            postButtons.delete(postId);
+          }
+        }, 3000);
+        
       } else {
         showNotification(response?.error || 'Evaluation failed. Please check your API key.', 'error');
+        // Reset button on error
+        button.disabled = false;
+        button.innerHTML = '📊 Evaluate';
       }
     } catch (error) {
       console.error('Evaluation error:', error);
       showNotification('An error occurred during evaluation.', 'error');
-    } finally {
-      isEvaluating = false;
-      evaluationButton.disabled = false;
-      evaluationButton.innerHTML = '📊 Evaluate Post';
+      // Reset button on error
+      button.disabled = false;
+      button.innerHTML = '📊 Evaluate';
+    }
+  }
+
+  // Function to show evaluation results for a specific post
+  function showEvaluationResultsForPost(scores, postId, postContent) {
+    const resultsDiv = document.createElement('div');
+    resultsDiv.id = `post-evaluator-results-${postId}`;
+    resultsDiv.className = 'post-evaluator-results';
+    
+    resultsDiv.innerHTML = `
+      <div class="evaluation-header">
+        <h3>📊 Post Evaluation Results</h3>
+        <button class="close-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+      <div class="evaluation-scores">
+        <div class="score-item">
+          <span class="score-label">Accuracy:</span>
+          <div class="score-bar">
+            <div class="score-fill" style="width: ${scores.accuracy * 10}%"></div>
+            <span class="score-value">${scores.accuracy}/10</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Original Thought:</span>
+          <div class="score-bar">
+            <div class="score-fill" style="width: ${scores.originality * 10}%"></div>
+            <span class="score-value">${scores.originality}/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="evaluation-summary">
+        <p><strong>Overall Assessment:</strong> ${getOverallAssessment(scores)}</p>
+      </div>
+    `;
+
+    // Remove existing results for this post
+    const existingResults = document.getElementById(`post-evaluator-results-${postId}`);
+    if (existingResults) {
+      existingResults.remove();
+    }
+
+    // Find the post element and insert results
+    const postData = postButtons.get(postId);
+    if (postData) {
+      const insertionPoint = postData.element;
+      insertionPoint.appendChild(resultsDiv);
+    } else {
+      // Fallback to document body
+      document.body.appendChild(resultsDiv);
     }
   }
 
@@ -188,79 +298,9 @@
     }
 
     // Insert results near the evaluation button
-    const insertionPoint = evaluationButton.parentElement || document.body;
-    insertionPoint.appendChild(resultsDiv);
+    document.body.appendChild(resultsDiv);
   }
 
-  // Function to show floating notification for auto-evaluation
-  function showFloatingNotification(scores, postElement, reasoning = null) {
-    const notification = document.createElement('div');
-    notification.className = 'post-evaluator-floating-notification';
-    
-    const avgScore = (scores.accuracy + scores.originality) / 2;
-    const scoreColor = avgScore >= 7 ? '#10b981' : avgScore >= 5 ? '#f59e0b' : '#ef4444';
-    
-    // Create detailed explanation if reasoning is available
-    let explanationHtml = '';
-    if (reasoning && reasoning.accuracy && reasoning.originality) {
-      explanationHtml = `
-        <div class="floating-explanation">
-          <div class="explanation-section">
-            <div class="explanation-header">
-              <span class="explanation-label">Accuracy</span>
-              <span class="explanation-score" style="color: ${scoreColor}">${scores.accuracy}/10</span>
-            </div>
-            <div class="explanation-text">${reasoning.accuracy}</div>
-          </div>
-          <div class="explanation-section">
-            <div class="explanation-header">
-              <span class="explanation-label">Originality</span>
-              <span class="explanation-score" style="color: ${scoreColor}">${scores.originality}/10</span>
-            </div>
-            <div class="explanation-text">${reasoning.originality}</div>
-          </div>
-        </div>
-      `;
-    }
-    
-    notification.innerHTML = `
-      <div class="floating-notification-content">
-        <div class="floating-scores">
-          <div class="floating-score">
-            <span class="floating-score-label">A</span>
-            <span class="floating-score-value" style="color: ${scoreColor}">${scores.accuracy}</span>
-          </div>
-          <div class="floating-score">
-            <span class="floating-score-label">O</span>
-            <span class="floating-score-value" style="color: ${scoreColor}">${scores.originality}</span>
-          </div>
-        </div>
-        <div class="floating-close" onclick="this.parentElement.parentElement.remove()">×</div>
-      </div>
-      ${explanationHtml}
-    `;
-
-    // Position the notification relative to the post
-    const rect = postElement.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    notification.style.position = 'absolute';
-    notification.style.top = (rect.top + scrollTop + 10) + 'px';
-    notification.style.right = '20px';
-    notification.style.zIndex = '1000';
-
-    // Add to document
-    document.body.appendChild(notification);
-
-    // Auto-remove after 12 seconds (longer for detailed explanations)
-    setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
-    }, 12000);
-
-    return notification;
-  }
 
   // Function to get overall assessment
   function getOverallAssessment(scores) {
@@ -285,83 +325,18 @@
     }, 5000);
   }
 
-  // Function to auto-evaluate a post
-  async function autoEvaluatePost(post) {
-    try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'evaluatePost',
-        content: post.content
-      });
-
-      if (response && response.success) {
-        // Mark as evaluated
-        evaluatedPosts.add(post.id);
-        
-        // Show floating notification with reasoning
-        showFloatingNotification(response.scores, post.element, response.reasoning);
-        
-        console.log(`Auto-evaluated post: A${response.scores.accuracy} O${response.scores.originality}`);
-      } else {
-        console.error('Auto-evaluation failed:', response?.error);
-      }
-    } catch (error) {
-      console.error('Auto-evaluation error:', error);
-    }
-  }
-
-  // Function to process evaluation queue
-  async function processEvaluationQueue() {
-    if (isProcessingQueue || evaluationQueue.length === 0) {
-      return;
-    }
-
-    isProcessingQueue = true;
-    
-    while (evaluationQueue.length > 0) {
-      const post = evaluationQueue.shift();
-      await autoEvaluatePost(post);
-      
-      // Add delay between evaluations to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-    
-    isProcessingQueue = false;
-  }
-
-  // Function to scan for new posts and add to evaluation queue
+  // Function to scan for new posts and add evaluation buttons
   function scanForNewPosts() {
     const posts = findAllPosts();
     
     posts.forEach(post => {
-      if (!evaluatedPosts.has(post.id) && !evaluationQueue.find(p => p.id === post.id)) {
-        evaluationQueue.push(post);
-      }
+      addButtonToPost(post);
     });
-    
-    // Process queue if there are new posts
-    if (evaluationQueue.length > 0) {
-      processEvaluationQueue();
-    }
   }
 
   // Function to add evaluation button to posts (legacy function)
   function addEvaluationButton() {
-    const postContent = findPostContent();
-    if (!postContent || postContent.length < 10) {
-      return;
-    }
-
-    // Check if button already exists
-    if (document.getElementById('post-evaluator-btn')) {
-      return;
-    }
-
-    const button = createEvaluationButton();
-    const insertionPoint = findInsertionPoint();
-    
-    if (insertionPoint) {
-      insertionPoint.appendChild(button);
-    }
+    scanForNewPosts();
   }
 
   // Throttled scroll handler

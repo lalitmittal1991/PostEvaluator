@@ -14,6 +14,9 @@
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 119, 181, 0.3);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .post-evaluator-button:hover {
@@ -27,6 +30,22 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Loader styles */
+.loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Evaluation Results */

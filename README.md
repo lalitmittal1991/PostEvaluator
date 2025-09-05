@@ -5,13 +5,13 @@ A Chrome extension that automatically evaluates LinkedIn posts for accuracy and 
 
 ## Features
 
-- **Auto-Evaluation**: Automatically evaluates LinkedIn posts as you scroll
-- **Real-time Notifications**: Shows floating score notifications on the right side of posts
+- **Manual Evaluation**: Click "Evaluate" button on each LinkedIn post to get AI-powered analysis
+- **Loading Indicators**: Shows animated loader while fetching evaluation data
 - **Dual Scoring System**: 
   - **Accuracy (A)**: Rates factual correctness and research quality (1-10)
   - **Original Thought (O)**: Rates creativity and insightfulness (1-10)
-- **Smart Post Detection**: Automatically identifies and tracks posts to avoid duplicate evaluations
-- **Manual Evaluation**: Optional manual evaluation button for specific posts
+- **Smart Post Detection**: Automatically identifies posts and adds evaluation buttons
+- **Individual Post Analysis**: Each post gets its own evaluation button and results
 - **API Key Management**: Secure storage of your Gemini API key
 
 ## Installation
@@ -39,16 +39,13 @@ A Chrome extension that automatically evaluates LinkedIn posts for accuracy and 
 
 ## Usage
 
-### Automatic Evaluation
-- Navigate to LinkedIn and scroll through your feed
-- The extension automatically detects new posts
-- Floating notifications appear on the right side showing scores
-- Notifications auto-disappear after 8 seconds
-- Click the × on notifications to dismiss them early
-
 ### Manual Evaluation
-- Click the "📊 Evaluate Post" button that appears on posts
-- View detailed evaluation results with explanations
+- Navigate to LinkedIn and scroll through your feed
+- The extension automatically detects new posts and adds "📊 Evaluate" buttons
+- Click the "📊 Evaluate" button on any post you want to analyze
+- A loading spinner will appear while the AI processes the post
+- View detailed evaluation results with accuracy and originality scores
+- The button changes to "✅ Evaluated" and disappears after 3 seconds
 - Close results using the × button
 
 ### Score Interpretation
@@ -77,7 +74,7 @@ ChromeExtensionProject/
   - `storage`: Store API key securely
   - `scripting`: Inject content scripts
 - **Host Permissions**: LinkedIn.com and Google's Gemini API
-- **Rate Limiting**: 2-second delay between evaluations to respect API limits
+- **User-Controlled**: Only evaluates posts when user clicks the evaluate button
 
 ## Privacy & Security
 
@@ -100,8 +97,8 @@ ChromeExtensionProject/
 - Ensure posts have sufficient content (minimum 20 characters)
 
 ### Performance Issues
-- The extension processes posts with a 2-second delay to avoid rate limiting
-- Large numbers of posts may take time to process
+- The extension only processes posts when you click the evaluate button
+- No automatic processing means better performance and battery life
 - Close unnecessary browser tabs to improve performance
 
 ## Development
