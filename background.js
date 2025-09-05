@@ -107,20 +107,24 @@ async function evaluatePost(content) {
       throw new Error('API key not found. Please set your Gemini API key in the extension popup.');
     }
 
-    const prompt = `Please evaluate the following LinkedIn post on two parameters: Accuracy and Original Thought. Rate each parameter on a scale of 1-10 where:
+    const prompt = `Please analyze the following LinkedIn post and categorize it, then evaluate its accuracy. 
+
+First, categorize the post as one of these types:
+- "News": Sharing news, updates, announcements, or current events
+- "Personal Opinion": Personal thoughts, experiences, or subjective viewpoints
+- "Insights": Professional insights, analysis, or educational content
+- "Other": Any other type of content
+
+Then, evaluate the accuracy on a scale of 1-10 where:
 - Accuracy (1-10): How factually correct and well-researched the content appears. Consider: factual claims, statistics, references, logical consistency, and evidence provided.
-- Original Thought (1-10): How original, creative, and insightful the ideas are. Consider: unique perspectives, innovative thinking, personal insights, creative solutions, and fresh approaches.
 
 Post content: "${content}"
 
 Please respond with ONLY a JSON object in this exact format:
 {
+  "postType": "[one of: News, Personal Opinion, Insights, Other]",
   "accuracy": [number between 1-10],
-  "originality": [number between 1-10],
-  "reasoning": {
-    "accuracy": "[detailed explanation of accuracy score - mention specific factual issues, missing evidence, or strong points. Keep it concise but informative, max 100 words]",
-    "originality": "[detailed explanation of originality score - mention what makes it unique or generic, creative elements, or lack thereof. Keep it concise but informative, max 100 words]"
-  }
+  "reasoning": "[detailed explanation of accuracy score - mention specific factual issues, missing evidence, or strong points. Keep it concise but informative, max 150 words]"
 }
 
 Do not include any other text, explanations, or formatting outside the JSON object.`;
@@ -172,24 +176,18 @@ Do not include any other text, explanations, or formatting outside the JSON obje
     }
 
     // Validate the response structure
-    if (typeof evaluation.accuracy !== 'number' || typeof evaluation.originality !== 'number') {
+    if (typeof evaluation.accuracy !== 'number' || !evaluation.postType) {
       throw new Error('Invalid evaluation format received from AI');
     }
 
-    // Ensure scores are within valid range
+    // Ensure accuracy score is within valid range
     evaluation.accuracy = Math.max(1, Math.min(10, Math.round(evaluation.accuracy)));
-    evaluation.originality = Math.max(1, Math.min(10, Math.round(evaluation.originality)));
 
     return {
       success: true,
-      scores: {
-        accuracy: evaluation.accuracy,
-        originality: evaluation.originality
-      },
-      reasoning: evaluation.reasoning || {
-        accuracy: 'No detailed reasoning provided',
-        originality: 'No detailed reasoning provided'
-      }
+      postType: evaluation.postType,
+      accuracy: evaluation.accuracy,
+      reasoning: evaluation.reasoning || 'No detailed reasoning provided'
     };
 
   } catch (error) {

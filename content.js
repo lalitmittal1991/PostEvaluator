@@ -191,8 +191,8 @@
         // Mark as evaluated
         evaluatedPosts.add(postId);
         
-        // Show evaluation results with detailed reasoning
-        showEvaluationResultsForPost(response.scores, postId, postContent, response.reasoning);
+        // Show evaluation results with post type, accuracy, and reasoning
+        showEvaluationResultsForPost(response, postId, postContent);
         
         // Update button to show completed state
         button.innerHTML = '✅ Evaluated';
@@ -222,62 +222,56 @@
   }
 
   // Function to show evaluation results for a specific post
-  function showEvaluationResultsForPost(scores, postId, postContent, reasoning = null) {
+  function showEvaluationResultsForPost(response, postId, postContent) {
     const resultsDiv = document.createElement('div');
     resultsDiv.id = `post-evaluator-results-${postId}`;
     resultsDiv.className = 'post-evaluator-results';
     
-    // Create detailed reasoning section if available
-    let reasoningHtml = '';
-    if (reasoning && reasoning.accuracy && reasoning.originality) {
-      reasoningHtml = `
-        <div class="evaluation-reasoning">
-          <h4>📝 Detailed Analysis</h4>
-          <div class="reasoning-section">
-            <div class="reasoning-item">
-              <div class="reasoning-header">
-                <span class="reasoning-label">Accuracy Analysis</span>
-                <span class="reasoning-score">${scores.accuracy}/10</span>
-              </div>
-              <div class="reasoning-text">${reasoning.accuracy}</div>
-            </div>
-            <div class="reasoning-item">
-              <div class="reasoning-header">
-                <span class="reasoning-label">Originality Analysis</span>
-                <span class="reasoning-score">${scores.originality}/10</span>
-              </div>
-              <div class="reasoning-text">${reasoning.originality}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    // Get post type color
+    const getPostTypeColor = (postType) => {
+      switch (postType) {
+        case 'News': return '#3b82f6';
+        case 'Personal Opinion': return '#10b981';
+        case 'Insights': return '#f59e0b';
+        case 'Other': return '#6b7280';
+        default: return '#6b7280';
+      }
+    };
+    
+    // Get accuracy score color
+    const getAccuracyColor = (score) => {
+      if (score >= 7) return '#10b981';
+      if (score >= 5) return '#f59e0b';
+      return '#ef4444';
+    };
     
     resultsDiv.innerHTML = `
       <div class="evaluation-header">
-        <h3>📊 Post Evaluation Results</h3>
+        <h3>📊 Post Analysis Results</h3>
         <button class="close-btn" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
-      <div class="evaluation-scores">
-        <div class="score-item">
-          <span class="score-label">Accuracy:</span>
-          <div class="score-bar">
-            <div class="score-fill" style="width: ${scores.accuracy * 10}%"></div>
-            <span class="score-value">${scores.accuracy}/10</span>
-          </div>
-        </div>
-        <div class="score-item">
-          <span class="score-label">Original Thought:</span>
-          <div class="score-bar">
-            <div class="score-fill" style="width: ${scores.originality * 10}%"></div>
-            <span class="score-value">${scores.originality}/10</span>
-          </div>
+      
+      <div class="post-type-section">
+        <div class="post-type-badge" style="background-color: ${getPostTypeColor(response.postType)}">
+          <span class="post-type-icon">${getPostTypeIcon(response.postType)}</span>
+          <span class="post-type-text">${response.postType}</span>
         </div>
       </div>
-      <div class="evaluation-summary">
-        <p><strong>Overall Assessment:</strong> ${getOverallAssessment(scores)}</p>
+      
+      <div class="accuracy-section">
+        <div class="accuracy-header">
+          <span class="accuracy-label">Accuracy Score</span>
+          <span class="accuracy-value" style="color: ${getAccuracyColor(response.accuracy)}">${response.accuracy}/10</span>
+        </div>
+        <div class="score-bar">
+          <div class="score-fill" style="width: ${response.accuracy * 10}%; background-color: ${getAccuracyColor(response.accuracy)}"></div>
+        </div>
       </div>
-      ${reasoningHtml}
+      
+      <div class="reasoning-section">
+        <h4>📝 Analysis Details</h4>
+        <div class="reasoning-text">${response.reasoning}</div>
+      </div>
     `;
 
     // Remove existing results for this post
@@ -296,36 +290,68 @@
       document.body.appendChild(resultsDiv);
     }
   }
+  
+  // Helper function to get post type icon
+  function getPostTypeIcon(postType) {
+    switch (postType) {
+      case 'News': return '📰';
+      case 'Personal Opinion': return '💭';
+      case 'Insights': return '💡';
+      case 'Other': return '📝';
+      default: return '📝';
+    }
+  }
 
   // Function to show evaluation results (legacy function for manual evaluation)
-  function showEvaluationResults(scores) {
+  function showEvaluationResults(response) {
     const resultsDiv = document.createElement('div');
     resultsDiv.id = 'post-evaluator-results';
     resultsDiv.className = 'post-evaluator-results';
     
+    // Get post type color
+    const getPostTypeColor = (postType) => {
+      switch (postType) {
+        case 'News': return '#3b82f6';
+        case 'Personal Opinion': return '#10b981';
+        case 'Insights': return '#f59e0b';
+        case 'Other': return '#6b7280';
+        default: return '#6b7280';
+      }
+    };
+    
+    // Get accuracy score color
+    const getAccuracyColor = (score) => {
+      if (score >= 7) return '#10b981';
+      if (score >= 5) return '#f59e0b';
+      return '#ef4444';
+    };
+    
     resultsDiv.innerHTML = `
       <div class="evaluation-header">
-        <h3>📊 Post Evaluation Results</h3>
+        <h3>📊 Post Analysis Results</h3>
         <button class="close-btn" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
-      <div class="evaluation-scores">
-        <div class="score-item">
-          <span class="score-label">Accuracy:</span>
-          <div class="score-bar">
-            <div class="score-fill" style="width: ${scores.accuracy * 10}%"></div>
-            <span class="score-value">${scores.accuracy}/10</span>
-          </div>
-        </div>
-        <div class="score-item">
-          <span class="score-label">Original Thought:</span>
-          <div class="score-bar">
-            <div class="score-fill" style="width: ${scores.originality * 10}%"></div>
-            <span class="score-value">${scores.originality}/10</span>
-          </div>
+      
+      <div class="post-type-section">
+        <div class="post-type-badge" style="background-color: ${getPostTypeColor(response.postType)}">
+          <span class="post-type-icon">${getPostTypeIcon(response.postType)}</span>
+          <span class="post-type-text">${response.postType}</span>
         </div>
       </div>
-      <div class="evaluation-summary">
-        <p><strong>Overall Assessment:</strong> ${getOverallAssessment(scores)}</p>
+      
+      <div class="accuracy-section">
+        <div class="accuracy-header">
+          <span class="accuracy-label">Accuracy Score</span>
+          <span class="accuracy-value" style="color: ${getAccuracyColor(response.accuracy)}">${response.accuracy}/10</span>
+        </div>
+        <div class="score-bar">
+          <div class="score-fill" style="width: ${response.accuracy * 10}%; background-color: ${getAccuracyColor(response.accuracy)}"></div>
+        </div>
+      </div>
+      
+      <div class="reasoning-section">
+        <h4>📝 Analysis Details</h4>
+        <div class="reasoning-text">${response.reasoning}</div>
       </div>
     `;
 
@@ -340,14 +366,12 @@
   }
 
 
-  // Function to get overall assessment
-  function getOverallAssessment(scores) {
-    const avgScore = (scores.accuracy + scores.originality) / 2;
-    
-    if (avgScore >= 8) return 'Excellent post with high accuracy and originality';
-    if (avgScore >= 6) return 'Good post with solid content';
-    if (avgScore >= 4) return 'Average post with room for improvement';
-    return 'Post needs significant improvement';
+  // Function to get accuracy assessment
+  function getAccuracyAssessment(score) {
+    if (score >= 8) return 'Excellent accuracy with well-researched content';
+    if (score >= 6) return 'Good accuracy with reliable information';
+    if (score >= 4) return 'Moderate accuracy with some concerns';
+    return 'Poor accuracy with significant factual issues';
   }
 
   // Function to show notifications
