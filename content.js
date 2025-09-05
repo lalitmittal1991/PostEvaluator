@@ -23,24 +23,35 @@
   function findAllPosts() {
     const postSelectors = [
       '[data-test-id="main-feed-activity-card"]',
-      '.feed-shared-update-v2',
-      '.feed-shared-update-v2__description-wrapper'
+      '.feed-shared-update-v2'
     ];
 
     const posts = [];
+    const processedIds = new Set();
+    
     for (const selector of postSelectors) {
       const elements = document.querySelectorAll(selector);
       elements.forEach(element => {
         const content = extractPostContent(element);
         if (content && content.length > 20) {
           const postId = generatePostId(content);
-          if (!evaluatedPosts.has(postId)) {
-            posts.push({
-              element: element,
-              content: content,
-              id: postId
-            });
+          
+          // Skip if already processed, evaluated, or has a button
+          if (processedIds.has(postId) || evaluatedPosts.has(postId) || postButtons.has(postId)) {
+            return;
           }
+          
+          // Check if button already exists in DOM
+          if (document.getElementById(`post-evaluator-btn-${postId}`)) {
+            return;
+          }
+          
+          processedIds.add(postId);
+          posts.push({
+            element: element,
+            content: content,
+            id: postId
+          });
         }
       });
     }
@@ -180,8 +191,8 @@
         // Mark as evaluated
         evaluatedPosts.add(postId);
         
-        // Show evaluation results
-        showEvaluationResultsForPost(response.scores, postId, postContent);
+        // Show evaluation results with detailed reasoning
+        showEvaluationResultsForPost(response.scores, postId, postContent, response.reasoning);
         
         // Update button to show completed state
         button.innerHTML = '✅ Evaluated';
@@ -211,10 +222,36 @@
   }
 
   // Function to show evaluation results for a specific post
-  function showEvaluationResultsForPost(scores, postId, postContent) {
+  function showEvaluationResultsForPost(scores, postId, postContent, reasoning = null) {
     const resultsDiv = document.createElement('div');
     resultsDiv.id = `post-evaluator-results-${postId}`;
     resultsDiv.className = 'post-evaluator-results';
+    
+    // Create detailed reasoning section if available
+    let reasoningHtml = '';
+    if (reasoning && reasoning.accuracy && reasoning.originality) {
+      reasoningHtml = `
+        <div class="evaluation-reasoning">
+          <h4>📝 Detailed Analysis</h4>
+          <div class="reasoning-section">
+            <div class="reasoning-item">
+              <div class="reasoning-header">
+                <span class="reasoning-label">Accuracy Analysis</span>
+                <span class="reasoning-score">${scores.accuracy}/10</span>
+              </div>
+              <div class="reasoning-text">${reasoning.accuracy}</div>
+            </div>
+            <div class="reasoning-item">
+              <div class="reasoning-header">
+                <span class="reasoning-label">Originality Analysis</span>
+                <span class="reasoning-score">${scores.originality}/10</span>
+              </div>
+              <div class="reasoning-text">${reasoning.originality}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
     
     resultsDiv.innerHTML = `
       <div class="evaluation-header">
@@ -240,6 +277,7 @@
       <div class="evaluation-summary">
         <p><strong>Overall Assessment:</strong> ${getOverallAssessment(scores)}</p>
       </div>
+      ${reasoningHtml}
     `;
 
     // Remove existing results for this post

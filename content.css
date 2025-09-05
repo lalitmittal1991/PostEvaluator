@@ -161,6 +161,81 @@
   line-height: 1.5;
 }
 
+/* Detailed Reasoning Styles */
+.evaluation-reasoning {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #f3f4f6;
+}
+
+.evaluation-reasoning h4 {
+  margin: 0 0 15px 0;
+  color: #1d2129;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.reasoning-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.reasoning-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid #3b82f6;
+}
+
+.reasoning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.reasoning-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.reasoning-score {
+  background: #3b82f6;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reasoning-text {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive adjustments for reasoning */
+@media (max-width: 768px) {
+  .reasoning-section {
+    gap: 12px;
+  }
+  
+  .reasoning-item {
+    padding: 12px;
+  }
+  
+  .reasoning-text {
+    font-size: 12px;
+  }
+  
+  .reasoning-label {
+    font-size: 13px;
+  }
+}
+
 /* Notifications */
 .post-evaluator-notification {
   position: fixed;
